@@ -4,9 +4,9 @@ title: Exploration of the Exponential Distribution and the Central Limit Theorem
 author: "Bill Martersteck"
 date: '`r format(Sys.Date(), "%B %d, %Y")`'
 output:
-  html_document: default
   pdf_document:
     fig_caption: yes
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
