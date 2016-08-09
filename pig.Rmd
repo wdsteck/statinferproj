@@ -1,0 +1,84 @@
+---
+title: "Exploration of the Tooth Growth in Guinea Pigs under various Dosages and Supplements"
+author: "Bill Martersteck"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  html_document: default
+  pdf_document:
+    fig_caption: yes
+---
+
+```{r setup, include=FALSE}
+require(knitr)
+require(markdown)
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview
+A study was done and data collected looking at the tooth growth in guinea pigs. 60 pigs were used in the study varying the delivery method (supplement) and dosage quantity. This analysis will examine that data and determine if supplement and/or dosage impact tooth growth in guinea pigs. Specifically, we will answer 2 questions:
+
+1. For a particular supplement (OJ and VC), is the tooth length impacted by dosage?
+2. For a particular dosage (.5, 1 and 2), is the tooth length impacted by supplement?
+
+## Summary of the ToothGrowth Dataset
+  
+The ToothGrowth dataset contains the results of studying 60 guinea pigs under various conditions. Each pig was provided Vitamin C in a particular dosage and supplement and the growth of the teeth were measured for the various pigs. The dataset documents the supplement, dosage and resulting length for each of the 60 pigs.
+
+```{r InitData}
+library(datasets)
+library(ggplot2)
+data(ToothGrowth)
+tg <- ToothGrowth
+tg$dose <- factor(tg$dose)
+```
+
+## Key Assumptions
+Although not explicitly stated, I assume there are 60 guinea pigs so each event is completely independant. I assume that tooth growth would follow a normal distribution centered around a population mean and with a population standard deviation. But given that there are so few samples for any one set of criteria, we have to use the Student T distribution for our analysis.
+
+## Given a supplement, does the dosage amount have an impact on tooth length
+To answer the first question, for each supplement (VC and OJ), compare the affect of dosage on length. $H_0: \mu_{.5} = \mu_{1.0}$ and $H_0: \mu_{1.0} = \mu_{2.0}$.
+
+For $supp = OJ$:
+```{r}
+t.test(tg$len[tg$dose == .5 & tg$supp == "OJ"], tg$len[tg$dose == 1 & tg$supp == "OJ"])$conf.int
+t.test(tg$len[tg$dose == 1 & tg$supp == "OJ"], tg$len[tg$dose == 2 & tg$supp == "OJ"])$conf.int
+```
+For $supp = VC$:
+```{r}
+t.test(tg$len[tg$dose == .5 & tg$supp == "VC"], tg$len[tg$dose == 1 & tg$supp == "VC"])$conf.int
+t.test(tg$len[tg$dose == 1 & tg$supp == "VC"], tg$len[tg$dose == 2 & tg$supp == "VC"])$conf.int
+```
+We can see that for each supplement, as the dosage is increased, the mean tooth length increases such that the 95% confidence interval does not contain 0 implying that it is safe to reject $H_0$ and assume the means are not the same. Thus, we can say that as dosage increases, tooth length increases. This assertion is backed up by figure 1.
+
+```{r, echo=TRUE, fig.height=2, fig.width=4, fig.cap="Impact of Dosage on Tooth Length for each Supplement"}
+ggplot(tg, aes(x=supp, y=len, color=dose)) + 
+  geom_boxplot () +
+  labs(x="Supplement", y="Tooth Length", color="Dose") + 
+  theme(legend.position=c(0.9, 0.2), legend.key.size = unit(.3, "cm"))
+```
+
+## Given a dosage method, does the supplement have an impact on tooth length
+To answer the second question, for each dosage (0.5, 1.0, 2.0), compare the affect of the supplement on tooth length. $H_0: \mu_{VC} = \mu_{OJ}$.
+
+For $dose = 0.5$:
+```{r}
+t.test(tg$len[tg$dose == .5 & tg$supp == "OJ"], tg$len[tg$dose == .5 & tg$supp == "VC"])$conf.int
+```
+For $dose = 1.0$:
+```{r}
+t.test(tg$len[tg$dose == 1 & tg$supp == "OJ"], tg$len[tg$dose == 1 & tg$supp == "VC"])$conf.int
+```
+For $dose = 1.0$:
+```{r}
+t.test(tg$len[tg$dose == 2 & tg$supp == "OJ"], tg$len[tg$dose == 2 & tg$supp == "VC"])$conf.int
+```
+
+From the t.test, we can see that at small dosages (.5 and 1.0), the confidence interval does not contain 0, thus, we can reject $H_0$ (means are the same) in favor of the alternative. This is supported by figure 2. For the large dosage (2.0), however, the means are very close and the confidence interval contains 0 so we cannot reject $H_0$. This is also supported by figure 2 showing that for a dosage of 2.0, the VC and OJ boxes are very similar in shape and location with respect to the y axis.
+
+```{r, echo=TRUE, fig.height=2, fig.width=4, fig.cap="Impact of Supplement on Tooth Length for each Dose"}
+ggplot(tg, aes(x=dose, y=len, color=supp)) + 
+  geom_boxplot () +
+  labs(x="Dose", y="Tooth Length", color="Supp") + 
+  theme(legend.position=c(0.9, 0.2), legend.key.size = unit(.3, "cm"))
+```
